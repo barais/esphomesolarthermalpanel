@@ -22,10 +22,13 @@ Together, these components form a complete, fully open-source solution for solar
 
 ## 🧬 Origin of the DL-bus Component
 
-This custom ESPHome component is partly inspired by the DL-Bus communication work from the [ESPEasy project](https://espeasy.readthedocs.io), specifically the implementation described in [Plugin P092_DLbus](https://espeasy.readthedocs.io/en/latest/Plugin/P092_DLbus.html)
-.
+This custom ESPHome component is partly inspired by the DL-Bus communication work from the [ESPEasy project](https://espeasy.readthedocs.io), specifically the implementation described in [Plugin P092_DLbus](https://espeasy.readthedocs.io/en/latest/Plugin/P092_DLbus.html).
+
 
 While the codebase and integration model were rewritten to fit ESPHome’s architecture and component system, the fundamental understanding of DL-Bus framing, message structure, and parsing logic originates from that pioneering ESPEasy reverse-engineering effort. This project extends that work by providing a clean, maintainable, ESPHome-native implementation that integrates seamlessly with Home Assistant, MQTT, and modern automation systems.
+
+This project is also inspired by the this [project](https://github.com/cocktailyogi/ESPHome-TA-UVR67/). We target the esp-idf framework for esphome. 
+
 
 ---
 
@@ -52,10 +55,10 @@ esphomesolarthermalpanel/
 ## ⚙️ How It Works
 
 1. **VBus Communication**  
-   We use directly the [VBUS Component](https://esphome.io/components/vbus/)  from ESPHome 
+   If your system is compatible with VBUS, We use directly the [VBUS Component](https://esphome.io/components/vbus/)  from ESPHome. 
 
 2. **DL-Bus Communication**  
-   The custom component reads DL-bus messages from your solar thermal controller.  
+   If your system is compatible with DL-BUS, the custom component reads DL-bus messages from your solar thermal controller.  
 
 3. **Sensor Mapping**  
    Inside the component you can define which DL-bus registers or frame fields correspond to "sensors" (e.g. collector temperature, return temperature, flow rate, pump state).  
@@ -175,6 +178,7 @@ esphome.io
 ## 📖 References
 
 - [ESPHome External Components Documentation](https://esphome.io)
+- [WT32 Resources](https://github.com/egnor/wt32-eth01)
 
 ## 🚀 Contributing
 
