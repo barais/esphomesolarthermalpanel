@@ -109,6 +109,7 @@ sensor:
   - platform: sensordlbus
     dl_pin: GPIO5
     id: sensordlbusreader1
+    model: "UVR61-3" # possible values: "UVR42", "ESR21", "UVR31", "UVR67", "UVR1611", "UVR61-3-83Plus", "UVR61-3" 
     temperature_1:
       id: temp1
       name: "DLBus Temperature 1"

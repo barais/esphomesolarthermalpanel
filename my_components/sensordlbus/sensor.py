@@ -13,6 +13,7 @@ from esphome import pins
 
 
 CONF_DL_PIN = "dl_pin"
+CONF_MODEL = "model"
 
 # Namespace für die External Component
 sensordlbus_ns = cg.esphome_ns.namespace("sensordlbus")
@@ -25,6 +26,8 @@ CONF_DEVICE_TYPE = "devicetype"
 CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(): cv.declare_id(SensorDLBus),
     cv.Required(CONF_DL_PIN): pins.gpio_output_pin_schema,
+    cv.Optional(CONF_MODEL, default="UVR61-3"): cv.string,
+
     cv.Optional(CONF_DEVICE_TYPE): sensor.sensor_schema(),
     cv.Optional("temperature_1"): sensor.sensor_schema(unit_of_measurement=UNIT_CELSIUS, icon=ICON_THERMOMETER, accuracy_decimals=1, device_class=DEVICE_CLASS_TEMPERATURE, state_class=STATE_CLASS_MEASUREMENT),
     cv.Optional("temperature_2"): sensor.sensor_schema(unit_of_measurement=UNIT_CELSIUS, icon=ICON_THERMOMETER, accuracy_decimals=1, device_class=DEVICE_CLASS_TEMPERATURE, state_class=STATE_CLASS_MEASUREMENT),
@@ -39,7 +42,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Optional("output_a5"): sensor.sensor_schema(),
     cv.Optional("output_a6"): sensor.sensor_schema(),
     cv.Optional("output_a7"): sensor.sensor_schema(),
-}).extend(cv.polling_component_schema("30s"))
+}).extend(cv.polling_component_schema("50s"))
 
 
 
@@ -55,6 +58,10 @@ async def to_code(config):
     if CONF_DEVICE_TYPE in config:
         sens = await sensor.new_sensor(config[CONF_DEVICE_TYPE])
         cg.add(var.set_device_type_sensor(sens))
+
+    if CONF_MODEL in config:
+        cg.add(var.set_profile(config[CONF_MODEL]))
+
 
     for i in range(1, 7):
         key = f"temperature_{i}"

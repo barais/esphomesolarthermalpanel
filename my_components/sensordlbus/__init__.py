@@ -13,6 +13,8 @@ from esphome.const import (
 ) 
 
 CONF_DL_PIN = "dl_pin"
+CONF_MODEL = "model"
+
 
 
 # Namespace für die External Component

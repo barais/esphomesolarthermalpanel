@@ -23,7 +23,7 @@ void SensorDLBus::setup() {
   gpio_num_t pin = static_cast<gpio_num_t>(dl_pin_->get_pin());
   // (si tu préfères l'instancier dans le constructeur, tu peux; ici on fait dans setup pour être sûr)
   if (!dlbus_) {
-    dlbus_ = new DLBus(pin);
+    dlbus_ = new DLBus(pin,model_);
     dlbus_->init();
   } 
 }

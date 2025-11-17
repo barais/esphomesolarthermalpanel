@@ -5,6 +5,7 @@
 #include "driver/gpio.h"
 #include "esp_attr.h"
 #include "esp_timer.h"
+#include <string>
 
 // Macro inchangée
 #define SET_BIT(byte, bit) ((byte) |= (1UL << (bit)))
@@ -56,7 +57,15 @@ class RingBuf {
 class DLBus {
 public:
   static const int Ringbuffersize = 2000;
-  static const int DL_Bus_PacketLength = 36;
+  static const int DL_Bus_PacketLength_UVR42 = 11;
+  static const int DL_Bus_PacketLength_UVR31 = 9;
+
+
+  static const int DL_Bus_PacketLength_UVR61_3 = 36;
+  static const int DL_Bus_PacketLength_UVR61_3_83Plus = 63;
+  static const int DL_Bus_PacketLength_UVR1611  = 65;
+  static const int DL_Bus_PacketLength_ESR21  = 32;
+  
   static const int Tmin = 800;     // µs
   static const int Tmax = 1200;    // µs
   static const int timeout = 3000; // ms timeout
@@ -75,7 +84,7 @@ public:
   };
 
   // ⭐ CONSTRUCTEUR AVEC PIN CONFIGURABLE
-  DLBus(gpio_num_t pin);
+  DLBus(gpio_num_t pin, const std::string  &model_);
 
   void init();
   bool captureSinglePacket();
@@ -88,6 +97,8 @@ public:
 private:
   // ⭐ Le pin est MAINTENANT une valeur d'instance, configurable
   gpio_num_t dl_input_pin;
+  std::string model;
+  bool checkCRC = false;
 
   // Pointeur instance
   static DLBus *instance;
@@ -105,8 +116,9 @@ private:
   RingBuf<InterruptData, Ringbuffersize> edgeTimeBuffer;
   RingBuf<bool, Ringbuffersize> bitBuffer;
 
-  unsigned char DL_Bus_Buffer[DL_Bus_PacketLength];
-
+//  unsigned char DL_Bus_Buffer[DL_Bus_PacketLength];
+  unsigned char *DL_Bus_Buffer;
+  int DL_Bus_PacketLength;
   void handleInterrupt();
   bool loadBitFromEdgeTimeBuffer();
   int  captureBit();

@@ -9,8 +9,50 @@ static const char *TAG = "DLBus";
 
 DLBus *DLBus::instance = nullptr;
 
-DLBus::DLBus(gpio_num_t pin) : dl_input_pin(pin) {
+DLBus::DLBus(gpio_num_t pin, const std::string &model_) : dl_input_pin(pin),model(model_) {
   instance = this;
+
+  if (model == "UVR42") {
+    DL_Bus_Buffer = new unsigned char[DL_Bus_PacketLength_UVR42];
+    DL_Bus_PacketLength=DL_Bus_PacketLength_UVR42;
+    checkCRC =false;
+  } 
+  else if (model == "UVR31") {
+    DL_Bus_Buffer = new unsigned char[DL_Bus_PacketLength_UVR31];
+    DL_Bus_PacketLength=DL_Bus_PacketLength_UVR31;
+   checkCRC =false;
+
+
+  }
+  else if (model == "UVR61-3-83Plus") {
+    DL_Bus_Buffer = new unsigned char[DL_Bus_PacketLength_UVR61_3_83Plus];
+    DL_Bus_PacketLength=DL_Bus_PacketLength_UVR61_3_83Plus;     
+       checkCRC =true;
+
+  }
+  else if (model == "UVR1611") {
+    DL_Bus_Buffer = new unsigned char[DL_Bus_PacketLength_UVR1611];
+    DL_Bus_PacketLength=DL_Bus_PacketLength_UVR1611;
+    checkCRC =true;
+  }
+  else if (model == "UVR67") {
+    DL_Bus_Buffer = new unsigned char[DL_Bus_PacketLength_UVR1611];
+    DL_Bus_PacketLength=DL_Bus_PacketLength_UVR1611;
+    checkCRC =true;
+
+  }
+    else if (model == "ESR21") {
+    DL_Bus_Buffer = new unsigned char[DL_Bus_PacketLength_ESR21];
+    DL_Bus_PacketLength=DL_Bus_PacketLength_ESR21;
+    checkCRC =true;
+  }
+
+  else {
+    DL_Bus_Buffer = new unsigned char[DL_Bus_PacketLength_UVR61_3];
+    DL_Bus_PacketLength=DL_Bus_PacketLength_UVR61_3;
+    checkCRC =true;
+  }
+
   for (int i = 0; i < DL_Bus_PacketLength; i++)
     DL_Bus_Buffer[i] = 0xFF;
 
@@ -95,6 +137,8 @@ unsigned char DLBus::receiveByte() {
 }
 
 bool DLBus::testChecksum() {
+  if (!checkCRC) return true;
+  
   unsigned char checksum = 1;
   for (int i=0; i < DL_Bus_PacketLength-1; i++)
     checksum += DL_Bus_Buffer[i];
@@ -114,6 +158,84 @@ int16_t DLBus::processTemperature(char low, char high) {
 }
 
 void DLBus::processData() {
+  if (model == "ESR21") {
+    lastFrame.DeviceID = DL_Bus_Buffer[1];
+    /*lastFrame.Sec      = DL_Bus_Buffer[3];
+    lastFrame.Min      = DL_Bus_Buffer[4];
+    lastFrame.Hour     = DL_Bus_Buffer[5];
+    lastFrame.Day      = DL_Bus_Buffer[6];
+    lastFrame.Month    = DL_Bus_Buffer[7];
+    lastFrame.Year     = DL_Bus_Buffer[8] + 2000;*/
+
+    lastFrame.Sensor1 = processTemperature(DL_Bus_Buffer[3],  DL_Bus_Buffer[4]);
+    lastFrame.Sensor2 = processTemperature(DL_Bus_Buffer[5], DL_Bus_Buffer[6]);
+    lastFrame.Sensor3 = processTemperature(DL_Bus_Buffer[7], DL_Bus_Buffer[8]);
+    lastFrame.Sensor4 = 0;
+    
+    lastFrame.Outputs = DL_Bus_Buffer[21] ;
+    return;
+  } else   if (model == "UVR1611") {
+    lastFrame.DeviceID = DL_Bus_Buffer[1];
+//    lastFrame.Sec      = DL_Bus_Buffer[3];
+    lastFrame.Min      = DL_Bus_Buffer[4];
+    lastFrame.Hour     = DL_Bus_Buffer[5];
+    lastFrame.Day      = DL_Bus_Buffer[6];
+    lastFrame.Month    = DL_Bus_Buffer[7];
+    lastFrame.Year     = DL_Bus_Buffer[8] + 2000;
+
+    lastFrame.Sensor1 = processTemperature(DL_Bus_Buffer[9],  DL_Bus_Buffer[10]);
+    lastFrame.Sensor2 = processTemperature(DL_Bus_Buffer[11], DL_Bus_Buffer[12]);
+    lastFrame.Sensor3 = processTemperature(DL_Bus_Buffer[13], DL_Bus_Buffer[14]);
+    lastFrame.Sensor4 = processTemperature(DL_Bus_Buffer[15], DL_Bus_Buffer[16]);
+    lastFrame.Sensor5 = processTemperature(DL_Bus_Buffer[17], DL_Bus_Buffer[18]);
+    lastFrame.Sensor6 = processTemperature(DL_Bus_Buffer[19], DL_Bus_Buffer[20]);
+    
+    lastFrame.Outputs = DL_Bus_Buffer[17] + 256 * DL_Bus_Buffer[18];
+    return;
+  } else if (model == "UVR31") {
+    lastFrame.DeviceID = DL_Bus_Buffer[1];
+    
+    lastFrame.Sensor1 = processTemperature(DL_Bus_Buffer[2],  DL_Bus_Buffer[3]);
+    lastFrame.Sensor2 = processTemperature(DL_Bus_Buffer[4], DL_Bus_Buffer[5]);
+    lastFrame.Sensor3 = processTemperature(DL_Bus_Buffer[6], DL_Bus_Buffer[7]);
+    
+    lastFrame.Outputs = DL_Bus_Buffer[8];
+    return;
+  }  else  if (model == "UVR42") {
+    lastFrame.DeviceID = DL_Bus_Buffer[1];
+
+
+    lastFrame.Sensor1 = processTemperature(DL_Bus_Buffer[2],  DL_Bus_Buffer[3]);
+    lastFrame.Sensor2 = processTemperature(DL_Bus_Buffer[4], DL_Bus_Buffer[5]);
+    lastFrame.Sensor3 = processTemperature(DL_Bus_Buffer[6], DL_Bus_Buffer[7]);
+    lastFrame.Sensor4 = processTemperature(DL_Bus_Buffer[8], DL_Bus_Buffer[9]);
+    
+    lastFrame.Outputs = DL_Bus_Buffer[10] ;
+    return;
+  } else if (model == "UVR61-3-83Plus") {
+
+  lastFrame.DeviceID = DL_Bus_Buffer[1];
+  lastFrame.Sec      = DL_Bus_Buffer[3];
+  lastFrame.Min      = DL_Bus_Buffer[4];
+  lastFrame.Hour     = DL_Bus_Buffer[5];
+  lastFrame.Day      = DL_Bus_Buffer[6];
+  lastFrame.Month    = DL_Bus_Buffer[7];
+  lastFrame.Year     = DL_Bus_Buffer[8] + 2000;
+
+  lastFrame.Sensor1 = processTemperature(DL_Bus_Buffer[9],  DL_Bus_Buffer[10]);
+  lastFrame.Sensor2 = processTemperature(DL_Bus_Buffer[11], DL_Bus_Buffer[12]);
+  lastFrame.Sensor3 = processTemperature(DL_Bus_Buffer[13], DL_Bus_Buffer[14]);
+  lastFrame.Sensor4 = processTemperature(DL_Bus_Buffer[15], DL_Bus_Buffer[16]);
+  lastFrame.Sensor5 = processTemperature(DL_Bus_Buffer[17], DL_Bus_Buffer[18]);
+  lastFrame.Sensor6 = processTemperature(DL_Bus_Buffer[19], DL_Bus_Buffer[20]);
+
+  lastFrame.Outputs = DL_Bus_Buffer[39] + 256 * DL_Bus_Buffer[40];
+//  lastFrame.Outputs = DL_Bus_Buffer[21];
+    } 
+
+    
+  else if (model == "UVR67"){
+
   lastFrame.DeviceID = DL_Bus_Buffer[1];
   lastFrame.Sec      = DL_Bus_Buffer[3];
   lastFrame.Min      = DL_Bus_Buffer[4];
@@ -130,6 +252,29 @@ void DLBus::processData() {
   lastFrame.Sensor6 = processTemperature(DL_Bus_Buffer[19], DL_Bus_Buffer[20]);
 
   lastFrame.Outputs = DL_Bus_Buffer[41] + 256 * DL_Bus_Buffer[42];
+    }
+
+  else{
+
+  lastFrame.DeviceID = DL_Bus_Buffer[1];
+  lastFrame.Sec      = DL_Bus_Buffer[3];
+  lastFrame.Min      = DL_Bus_Buffer[4];
+  lastFrame.Hour     = DL_Bus_Buffer[5];
+  lastFrame.Day      = DL_Bus_Buffer[6];
+  lastFrame.Month    = DL_Bus_Buffer[7];
+  lastFrame.Year     = DL_Bus_Buffer[8] + 2000;
+
+  lastFrame.Sensor1 = processTemperature(DL_Bus_Buffer[9],  DL_Bus_Buffer[10]);
+  lastFrame.Sensor2 = processTemperature(DL_Bus_Buffer[11], DL_Bus_Buffer[12]);
+  lastFrame.Sensor3 = processTemperature(DL_Bus_Buffer[13], DL_Bus_Buffer[14]);
+  lastFrame.Sensor4 = processTemperature(DL_Bus_Buffer[15], DL_Bus_Buffer[16]);
+  lastFrame.Sensor5 = processTemperature(DL_Bus_Buffer[17], DL_Bus_Buffer[18]);
+  lastFrame.Sensor6 = processTemperature(DL_Bus_Buffer[19], DL_Bus_Buffer[20]);
+
+//  lastFrame.Outputs = DL_Bus_Buffer[41] + 256 * DL_Bus_Buffer[42];
+  lastFrame.Outputs = DL_Bus_Buffer[21];
+    }
+
 }
 
 bool DLBus::captureSinglePacket() {
