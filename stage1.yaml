@@ -1,0 +1,36 @@
+substitutions:
+
+  device_name: "solarpanelstep1"
+  friendly_name: Solar Panel Stage1
+  board_type: wt32-eth01
+
+
+# Enable logging
+logger:
+  level: ERROR # VERY_VERBOSE, VERBOSE, DEBUG, INFO, WARN, ERROR, NONE
+  baud_rate: 115200 # 0 to disable
+  hardware_uart: UART0
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+
+esp32:
+  board: ${board_type}
+
+
+wifi:
+  ssid: solarpanel
+  password: testtest
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${device_name}
+    password: testtest
+
+captive_portal:
+
+# Restart & Safe Mode Buttons
+button:
+  - platform: restart
+    name: "Restart Device"

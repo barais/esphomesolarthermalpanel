@@ -1,0 +1,135 @@
+
+### START - Update this section with relevant details ###
+
+substitutions:
+
+  device_name: "solarpaneltest"
+  device_id: "\"solarpaneltest\""
+  friendly_name: Solar Panel Test
+  board_type: wt32-eth01
+
+  # MQTT Credentials
+  mqtt_host: mqtt.host.net
+  mqtt_username: mqtt
+  mqtt_password: mqtt
+
+  mqttstate_topic: solarpanel/test/solarpanel/state
+  mqtt_ota_topic: solarpaneltest/ota
+  mqtt_logs_topic: solarpaneltest/logs
+  mqtt_ota_firmware_md5: https://photosbarais.ddns.net/firmware/test/firmware.md5
+  mqtt_ota_firmware: https://photosbarais.ddns.net/firmware/test/firmware.bin
+
+  #network paramerters
+  ip: 192.168.1.34
+  mask: 255.255.255.0 
+  gw: 192.168.1.1
+  dns1: 8.8.8.8
+  dns2: 1.1.1.1
+### END ###
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+
+
+external_components:
+  - source: 
+      type: local
+      path: ./my_components/
+
+esp32:
+  board: ${board_type}
+  framework:
+    type: esp-idf
+
+
+
+### connection LAN ###
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO0_IN
+  phy_addr: 1
+  power_pin: GPIO16
+
+  manual_ip: 
+    static_ip: ${ip}
+    subnet: ${mask}
+    gateway: ${gw}
+    dns1: ${dns1}
+    dns2: ${dns2}
+
+# Enable logging
+logger:
+  level: ERROR # VERY_VERBOSE, VERBOSE, DEBUG, INFO, WARN, ERROR, NONE
+  baud_rate: 115200
+  hardware_uart: UART0
+  on_message:
+    level: ERROR
+    then:
+      - mqtt.publish:
+          topic: ${mqtt_logs_topic}
+          payload: !lambda |-
+            return "Triggered on_message with level " + to_string(level) + ", tag " + tag + " and message " + message;
+
+
+mqtt:
+  broker: ${mqtt_host}
+  username: ${mqtt_username}
+  password: ${mqtt_password}
+  on_message:
+    topic: ${mqtt_ota_topic}
+    qos: 1
+    then:
+      - ota.http_request.flash:
+          md5_url: ${mqtt_ota_firmware_md5}
+          url: ${mqtt_ota_firmware}
+      - logger.log: "This message should be not displayed because the device reboots"
+
+
+
+
+
+http_request:
+  verify_ssl: false 
+
+ota:
+  - platform: http_request
+
+
+
+# Restart & Safe Mode Buttons
+button:
+  - platform: restart
+    name: "Restart Device"
+
+
+sensor:
+  - platform: sensordlbus
+    dl_pin: GPIO5
+    id: sensordlbusreader1
+    temperature_1:
+      id: temp1
+      name: "DLBus Temperature 1"
+    temperature_2:
+      id: temp2
+      name: "DLBus Temperature 2"
+      on_value:
+          then:
+            mqtt.publish_json:
+              qos: 1
+              retain: true        
+              topic: ${mqttstate_topic}
+              payload: |-
+                root["device_id"] = ${device_id};
+                root["temp1"] = id(temp1).state;
+                root["temp2"] = id(temp2).state;
+
+#                root["temp3"] = id(temp3).state;
+#                root["temp4"] = id(temp4).state;
+#                root["pump1"] = id(pump1).state;
+#                root["wifi"] = id(wifi_signal_percent).state;
+#                root["energy"] = id(energy).state;  
+
+
