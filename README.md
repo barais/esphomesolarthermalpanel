@@ -68,6 +68,14 @@ esphomesolarthermalpanel/
 
 ---
 
+## 🔌 Hardware Requirements
+
+To operate this project in a safe and reliable manner, a minimal hardware setup is required. The system is based on an ESP32 (or any other microcontroller fully compatible with ESPHome) that interfaces with the solar-thermal controller’s DL-Bus. For electrical protection and correct signal isolation, a standard 817 optocoupler must be used, following the wiring schematic provided below, ensuring that the controller’s communication bus is safely decoupled from the ESP device. The ESP32 should be powered using a 220V → 3.3V or 220V → 5V power supply, depending on the board variant.
+Additionally, a dedicated HAT for the WT32-ETH01 module—which brings hardware Ethernet support for improved reliability—is currently under design and will provide an even cleaner and safer integration in the future.
+
+![](images/vbus_serial_optocoupler.png)
+
+
 ## 📘 Example Configuration if using DL-BUS
 
 Here is a simplified snippet illustrating how to include the custom DL-bus component in an ESPHome YAML:
@@ -177,6 +185,9 @@ Contributions are welcome! Whether it’s:
 
 Feel free to open an issue or submit a pull request.
 
+
+
 ## TODOList
 
 - [ ] Manage 50hz frequency for UVR31, UVR42, UVR64
+- [ ] Integrate other custom components for existing protocols
